@@ -1,6 +1,7 @@
 const User = require('./auth.model');
 const { generateAccessToken, generateRefreshToken } = require("../../utils/generateToken")
 const ApiError = require("../../utils/ApiError")
+const { comparePassword } = require("../../utils/bcrypt")
 
 const createToken = (userId, role) => {
     const payload = { id: userId, role }
@@ -10,7 +11,7 @@ const createToken = (userId, role) => {
     }
 }
 
-const createUser = async (data) => {
+const CreateUser = async (data) => {
 
     const existingUser = await User.findOne({ email: data.email })
 
@@ -30,6 +31,40 @@ const createUser = async (data) => {
     return { user, accessToken, refreshToken }
 }
 
+const Login = async (data) => {
+    const existingUser = await User.findOne({ email: data.email }).select("+password")
+
+    if (!existingUser) {
+        throw new ApiError(
+            401,
+            "Email or password does not match"
+        )
+    }
+
+    const validPassword = await comparePassword(data.password, existingUser.password)
+
+    if (!validPassword) {
+        throw new ApiError(
+            401,
+            "Email or password does not match"
+        )
+    }
+
+    if (!existingUser.isActive) {
+        throw new ApiError(
+            403,
+            "Your account is inactive. Please contact your administrator."
+        )
+    }
+
+    const { accessToken, refreshToken } = createToken(existingUser._id, existingUser.role)
+
+    await User.findByIdAndUpdate(existingUser._id, { refreshToken })
+
+    return { user: existingUser, accessToken, refreshToken }
+}
+
 module.exports = {
-    createUser
+    CreateUser,
+    Login
 }
