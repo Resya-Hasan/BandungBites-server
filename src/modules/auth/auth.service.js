@@ -61,10 +61,36 @@ const Login = async (data) => {
 
     await User.findByIdAndUpdate(existingUser._id, { refreshToken })
 
-    return { user: existingUser, accessToken, refreshToken }
+    const user = {
+        _id: existingUser._id,
+        name: existingUser.name,
+        email: existingUser.email,
+        role: existingUser.role,
+        isActive: existingUser.isActive
+    }
+
+    return { user, accessToken, refreshToken }
+}
+
+const RefreshToken = async (refreshToken) => {
+    const existingUser = await User.findOne({ refreshToken }).select("-password")
+
+    if (!existingUser) {
+        throw new ApiError(
+            401,
+            "Invalid refresh token"
+        )
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = createToken(existingUser._id, existingUser.role)
+
+    await User.findByIdAndUpdate(existingUser._id, { refreshToken: newRefreshToken })
+
+    return { user: existingUser, accessToken, refreshToken: newRefreshToken }
 }
 
 module.exports = {
     CreateUser,
-    Login
+    Login,
+    RefreshToken
 }
