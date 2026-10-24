@@ -89,8 +89,23 @@ const RefreshToken = async (refreshToken) => {
     return { user: existingUser, accessToken, refreshToken: newRefreshToken }
 }
 
+const deleteToken = async (refreshToken) => {
+    const existingUser = await User.findOne({refreshToken }).select("-password")
+
+    if (!existingUser) {
+        throw new ApiError(
+            401,
+            "Invalid refresh token"
+        )
+    }
+
+    existingUser.refreshToken = null;
+    await existingUser.save()
+}
+
 module.exports = {
     CreateUser,
     Login,
-    RefreshToken
+    RefreshToken,
+    deleteToken
 }
