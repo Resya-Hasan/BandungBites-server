@@ -1,4 +1,4 @@
-const { registerSchema, loginSchema, RefreshToken } = require('./auth.validation');
+const { registerSchema, loginSchema, RefreshToken, deleteToken } = require('./auth.validation');
 const AuthService = require('./auth.service');
 const ApiResponse = require("../../utils/ApiResponse");
 const ApiError = require('../../utils/ApiError');
@@ -51,8 +51,6 @@ module.exports = class AuthController {
         try {
             const refreshToken = req.cookies?.refreshToken;
 
-            console.log(refreshToken, " <<<<<<")
-
             if (!refreshToken) {
                 throw new ApiError(401, "Refresh token is required")
             }
@@ -77,6 +75,34 @@ module.exports = class AuthController {
             );
         } catch (err) {
             next(err);
+        }
+    }
+
+    static async logout(req, res, next) {
+        try {
+            const refreshToken = req.cookies?.refreshToken;
+
+            if (!refreshToken) {
+                throw new ApiError(401, "Refresh token is required")
+            }
+
+            await AuthService.deleteToken(refreshToken)
+
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                scure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                path: "/api/v1/auth"
+            })
+
+            res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "Logout successful"
+                )
+            )
+        } catch (err) {
+            next(err)
         }
     }
 }
