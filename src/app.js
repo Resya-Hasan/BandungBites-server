@@ -17,7 +17,8 @@ app.get('/', (req, res) => {
     res.send('Wellcome!');
 });
 
-app.use('/api/v1/auth', require('./modules/auth/auth.route'));
+app.use('/api/v1/auth', require('./modules/auth/auth.routes'));
+app.use('/api/v1/menu', require('./modules/menu/menu.routes'));
 
 app.use(ErrorHandler)
 
