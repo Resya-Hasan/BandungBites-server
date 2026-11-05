@@ -1,4 +1,4 @@
-const { registerSchema, loginSchema, RefreshToken, deleteToken } = require('./auth.validation');
+const { registerSchema, loginSchema, RefreshToken, deleteToken, getMe } = require('./auth.validation');
 const AuthService = require('./auth.service');
 const ApiResponse = require("../../utils/ApiResponse");
 const ApiError = require('../../utils/ApiError');
@@ -8,12 +8,21 @@ module.exports = class AuthController {
         try {
             const validatedData = registerSchema.parse(req.body);
             const result = await AuthService.CreateUser(validatedData);
+            const { refreshToken, ...responseData } = result;
+
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: "/api/v1/auth"
+            })
 
             res.status(201).json(
                 new ApiResponse(
                     201,
+                    "Register success",
                     result,
-                    "Register success"
                 )
             );
         } catch (err) {
@@ -38,8 +47,8 @@ module.exports = class AuthController {
             res.status(200).json(
                 new ApiResponse(
                     200,
+                    "Login success",
                     responseData,
-                    "Login success"
                 )
             )
         } catch (err) {
@@ -69,11 +78,23 @@ module.exports = class AuthController {
             res.status(200).json(
                 new ApiResponse(
                     200,
+                    "Token refreshed successfully",
                     responseData,
-                    "Token refreshed successfully"
                 )
             );
         } catch (err) {
+            if (
+                err instanceof ApiError &&
+                (err.statusCode === 401 || err.statusCode === 403)
+            ) {
+                res.clearCookie("refreshToken", {
+                    httpOnly: true,
+                    scure: process.env.NODE_ENV === "production",
+                    sameSite: "lax",
+                    path: "/api/v1/auth"
+                })
+            }
+            
             next(err);
         }
     }
@@ -101,6 +122,23 @@ module.exports = class AuthController {
                     "Logout successful"
                 )
             )
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async getMe(req, res, next) {
+        try {
+            const { _id } = req.user;
+
+            const user = await AuthService.getMe(_id);
+            res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "User data retrieved successfully",
+                    user
+                )
+            );
         } catch (err) {
             next(err)
         }
