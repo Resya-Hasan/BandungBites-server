@@ -1,4 +1,5 @@
 const Category = require("./category.model")
+const ApiError = require("../../utils/ApiError")
 
 const getAllCategories = async () => {
     const categories = await Category.find().exec();
@@ -19,7 +20,7 @@ const updateCategory = async (id, { name_id, name_en }) => {
     const category = await Category.findOne({ _id: id }).exec();
 
     if (!category) {
-        throw new Error("Category not found");
+        throw new ApiError(404, "Category not found");
     }
 
     if (name_id !== undefined) {
@@ -42,8 +43,20 @@ const updateCategory = async (id, { name_id, name_en }) => {
     return updatedCategory;
 }
 
+const deleteCategory = async (id) => {
+    const category = await Category.findOne({ _id: id }).exec();
+
+    if (!category) {
+        throw new ApiError(404, "Category not found");
+    }
+
+    await Category.findByIdAndDelete(id);
+    return { message: "Category deleted successfully" };
+}
+
 module.exports = {
     getAllCategories,
     createCategory,
-    updateCategory
+    updateCategory,
+    deleteCategory
 }

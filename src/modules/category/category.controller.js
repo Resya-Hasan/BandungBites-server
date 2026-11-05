@@ -52,4 +52,21 @@ module.exports = class CategoryController {
             next(err);
         }
     }
+
+    static async deleteCategory(req, res, next) {
+        try {
+            const { id } = req.params;
+            const result = await CategoryService.deleteCategory(id);
+
+            res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "Delete category success",
+                    result,
+                )
+            )
+        } catch (err) {
+            next(err);
+        }
+    }
 }
