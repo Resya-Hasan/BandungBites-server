@@ -34,4 +34,22 @@ module.exports = class CategoryController {
             next(err);
         }
     }
+
+    static async updateCategory(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { name_id, name_en } = req.body;
+            const result = await CategoryService.updateCategory(id, { name_id, name_en });
+
+            res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "Update category success",
+                    result,
+                )
+            )
+        } catch (err) {
+            next(err);
+        }
+    }
 }
