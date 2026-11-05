@@ -1,10 +1,10 @@
 const User = require('./auth.model');
-const { generateAccessToken, generateRefreshToken } = require("../../utils/generateToken")
+const { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } = require("../../utils/generateToken")
 const ApiError = require("../../utils/ApiError")
 const { comparePassword } = require("../../utils/bcrypt")
 
 const createToken = (userId, role) => {
-    const payload = { id: userId, role }
+    const payload = { _id: userId, role }
     return {
         accessToken: generateAccessToken(payload),
         refreshToken: generateRefreshToken(payload)
@@ -28,7 +28,15 @@ const CreateUser = async (data) => {
 
     await User.findByIdAndUpdate(user._id, { refreshToken })
 
-    return { user, accessToken, refreshToken }
+    const saveUser = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive
+    }
+
+    return { user: saveUser, accessToken, refreshToken }
 }
 
 const Login = async (data) => {
@@ -73,24 +81,59 @@ const Login = async (data) => {
 }
 
 const RefreshToken = async (refreshToken) => {
-    const existingUser = await User.findOne({ refreshToken }).select("-password")
-
-    if (!existingUser) {
-        throw new ApiError(
-            401,
-            "Invalid refresh token"
-        )
+    if (!refreshToken) {
+        throw new ApiError(401, "Refresh token is required");
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = createToken(existingUser._id, existingUser.role)
+    try {
+        verifyRefreshToken(refreshToken);
+    } catch (err) {
+        if (
+            err.name === "TokenExpiredError" ||
+            err.name === "JsonWebTokenError"
+        ) {
+            throw new ApiError(401, "Refresh token expired or invalid");
+        }
 
-    await User.findByIdAndUpdate(existingUser._id, { refreshToken: newRefreshToken })
+        throw err;
+    }
 
-    return { user: existingUser, accessToken, refreshToken: newRefreshToken }
-}
+    const existingUser = await User.findOne({ refreshToken });
+
+    if (!existingUser) {
+        throw new ApiError(401, "Invalid refresh token");
+    }
+
+    if (!existingUser.isActive) {
+        throw new ApiError(403, "Account is inactive");
+    }
+
+    const {
+        accessToken,
+        refreshToken: newRefreshToken
+    } = createToken(existingUser._id, existingUser.role);
+
+    await User.findByIdAndUpdate(existingUser._id, {
+        refreshToken: newRefreshToken
+    });
+
+    const user = {
+        _id: existingUser._id,
+        name: existingUser.name,
+        email: existingUser.email,
+        role: existingUser.role,
+        isActive: existingUser.isActive
+    };
+
+    return {
+        user,
+        accessToken,
+        refreshToken: newRefreshToken
+    };
+};
 
 const deleteToken = async (refreshToken) => {
-    const existingUser = await User.findOne({refreshToken }).select("-password")
+    const existingUser = await User.findOne({ refreshToken }).select("-password")
 
     if (!existingUser) {
         throw new ApiError(
@@ -103,9 +146,31 @@ const deleteToken = async (refreshToken) => {
     await existingUser.save()
 }
 
+const getMe = async (_id) => {
+    const existingUser = await User.findOne({ _id }).select("-password")
+
+    if (!existingUser) {
+        throw new ApiError(
+            401,
+            "Invalid access token"
+        )
+    }
+
+    const user = {
+        _id: existingUser._id,
+        name: existingUser.name,
+        email: existingUser.email,
+        role: existingUser.role,
+        isActive: existingUser.isActive
+    }
+
+    return user
+}
+
 module.exports = {
     CreateUser,
     Login,
     RefreshToken,
-    deleteToken
+    deleteToken,
+    getMe
 }
