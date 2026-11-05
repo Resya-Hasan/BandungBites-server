@@ -1,6 +1,7 @@
 const ApiResponse = require("../../utils/ApiResponse");
+const MenuService = require("./menu.service");
 
-module.export = class MenuController {
+module.exports = class MenuController {
     static async getAllMenuItems(req, res, next) {
         try {
             const result = await MenuService.getAllMenuItems();
