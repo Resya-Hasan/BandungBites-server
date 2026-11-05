@@ -17,4 +17,21 @@ module.exports = class CategoryController {
             next(err);
         }
     }
+
+    static async createCategory(req, res, next) {
+        try {
+            const { name_id, name_en } = req.body;
+            const result = await CategoryService.createCategory({ name_id, name_en });
+
+            res.status(201).json(
+                new ApiResponse(
+                    201,
+                    "Create category success",
+                    result,
+                )
+            )
+        } catch (err) {
+            next(err);
+        }
+    }
 }
