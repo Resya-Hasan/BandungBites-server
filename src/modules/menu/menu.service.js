@@ -1,4 +1,4 @@
-
+const MenuItem = require("./menu.model");
 
 const getAllMenuItems = async () => {
     try {
@@ -7,9 +7,18 @@ const getAllMenuItems = async () => {
     } catch(err) {
         throw err;
     }
+}
 
+const createMenuItem = async (data) => {
+    try {
+        const menuItem = await MenuItem.create(data);
+        return menuItem;
+    } catch(err) {
+        throw err;
+    }
 }
 
 module.exports = {
-    getAllMenuItems
+    getAllMenuItems,
+    createMenuItem
 }
