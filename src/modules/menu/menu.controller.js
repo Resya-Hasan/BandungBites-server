@@ -52,4 +52,21 @@ module.exports = class MenuController {
             next(err);
         }
     }
+
+    static async deleteMenuItem(req, res, next) {
+        try {
+            const { id } = req.params;
+            const result = await MenuService.deleteMenuItem(id);
+
+            res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "Delete menu item success",
+                    result,
+                )
+            );
+        } catch(err) {
+            next(err);
+        }
+    }
 }
