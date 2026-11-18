@@ -13,6 +13,10 @@ const createMenuItemSchema = z.object({
     category: z.string().min(1, { message: "Category is required" })
 })
 
+const updateMenuItemSchema = createMenuItemSchema.partial().refine((data) => Object.keys(data).length > 0,
+    {message: "At least one field must be provided"})
+
 module.exports = {
-    createMenuItemSchema
+    createMenuItemSchema,
+    updateMenuItemSchema
 }

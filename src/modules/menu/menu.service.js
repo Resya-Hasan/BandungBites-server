@@ -1,4 +1,5 @@
 const MenuItem = require("./menu.model");
+const ApiError = require("../../utils/ApiError");
 
 const getAllMenuItems = async () => {
     try {
@@ -18,7 +19,22 @@ const createMenuItem = async (data) => {
     }
 }
 
+const updateMenuItem = async (id, data) => {
+    try {
+        const menuItem = await MenuItem.findByIdAndUpdate(id, { $set: data}, { new: true, runValidators: true });
+
+        if (!menuItem) {
+            throw new ApiError(404, "Menu item not found");
+        }
+
+        return menuItem;
+    } catch(err) {
+        throw err;
+    }
+}
+
 module.exports = {
     getAllMenuItems,
-    createMenuItem
+    createMenuItem,
+    updateMenuItem
 }
