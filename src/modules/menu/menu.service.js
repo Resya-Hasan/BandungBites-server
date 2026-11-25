@@ -9,6 +9,18 @@ const getAllMenuItems = async () => {
     return menuItems;
 };
 
+const getMenuItemById = async (id) => {
+    const menuItem = await MenuItem.findById(id)
+        .populate("category", "name_id")
+        .exec();
+
+    if (!menuItem) {
+        throw new ApiError(404, "Menu item not found");
+    }
+
+    return menuItem;
+}
+
 const createMenuItem = async (data) => {
     const menuItem = await MenuItem.create(data);
 
@@ -44,6 +56,7 @@ const deleteMenuItem = async (id) => {
 
 module.exports = {
     getAllMenuItems,
+    getMenuItemById,
     createMenuItem,
     updateMenuItem,
     deleteMenuItem
