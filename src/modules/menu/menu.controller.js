@@ -18,6 +18,22 @@ module.exports = class MenuController {
         }
     }
 
+    static async getMenuItemById(req, res, next) {
+        try{
+            const { id } = req.params;
+            const result = await MenuService.getMenuItemById(id);
+            res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "Get menu item by id success",
+                    result,
+                )
+            );
+        } catch(err) {
+            next(err);
+        }
+    }
+
     static async createMenuItem(req, res, next) {
         try {
             const validateData = createMenuItemSchema.parse(req.body);
