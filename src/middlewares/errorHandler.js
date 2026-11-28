@@ -2,14 +2,13 @@ const ApiError = require("../utils/ApiError")
 const { ZodError } = require("zod")
 
 const ErrorHandler = (err, req, res, next) => {
-    console.log(err)
+    let error = err
 
     if (err instanceof ZodError) {
-        const errors = {}
-
-        err.issues.forEach(issue => {
-            errors[issue.path.join(".")] = issue.message
-        })
+        const errors = err.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message
+        }))
 
         return res.status(400).json(
             new ApiError(
@@ -20,9 +19,11 @@ const ErrorHandler = (err, req, res, next) => {
         )
     }
 
-    if (err instanceof ApiError) {
-        return res.status(err.statusCode).json(err)
+    if (error instanceof ApiError) {
+        return res.status(error.statusCode).json(error.toJSON())
     }
+
+    console.log(err)
 
     res.status(500).json(
         new ApiError(

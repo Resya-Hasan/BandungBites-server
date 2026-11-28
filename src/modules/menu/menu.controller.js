@@ -5,7 +5,9 @@ const { createMenuItemSchema, updateMenuItemSchema } = require("./menu.validatio
 module.exports = class MenuController {
     static async getAllMenuItems(req, res, next) {
         try {
-            const result = await MenuService.getAllMenuItems();
+            const {search} = req.query;
+
+            const result = await MenuService.getAllMenuItems(search);
             res.status(200).json(
                 new ApiResponse(
                     200,
