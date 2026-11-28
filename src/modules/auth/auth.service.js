@@ -33,6 +33,9 @@ const CreateUser = async (data) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
         isActive: user.isActive
     }
 
@@ -74,6 +77,9 @@ const Login = async (data) => {
         name: existingUser.name,
         email: existingUser.email,
         role: existingUser.role,
+        avatar: existingUser.avatar,
+        createdAt: existingUser.createdAt,
+        updatedAt: existingUser.updatedAt,
         isActive: existingUser.isActive
     }
 
@@ -161,6 +167,9 @@ const getMe = async (_id) => {
         name: existingUser.name,
         email: existingUser.email,
         role: existingUser.role,
+        avatar: existingUser.avatar,
+        createdAt: existingUser.createdAt,
+        updatedAt: existingUser.updatedAt,
         isActive: existingUser.isActive
     }
 

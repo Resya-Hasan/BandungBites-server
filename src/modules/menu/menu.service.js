@@ -1,8 +1,17 @@
 const MenuItem = require("./menu.model");
 const ApiError = require("../../utils/ApiError");
 
-const getAllMenuItems = async () => {
-    const menuItems = await MenuItem.find()
+const getAllMenuItems = async (search) => {
+    const filter = {};
+
+    if (search) {
+        filter.name_id = {
+            $regex: search,
+            $options: "i"
+        };
+    }
+
+    const menuItems = await MenuItem.find(filter)
         .populate("category", "name_id")
         .exec();
 
